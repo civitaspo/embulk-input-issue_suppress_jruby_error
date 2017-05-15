@@ -50,8 +50,55 @@ module Embulk
         page_builder.add(["example-value", 2, 0.2])
         page_builder.finish
 
+        begin
+          err
+        rescue => e
+          ::Embulk.logger.error "e: {class:#{e.class},msg:#{e}}"
+          ::Embulk.logger.error "e.cause: {class:#{e.cause.class},msg:#{e.cause}}"
+          ::Embulk.logger.error "e.cause.cause: {class:#{e.cause.cause.class},msg:#{e.cause.cause}}"
+          ::Embulk.logger.error "e.cause.cause.cause: {class:#{e.cause.cause.cause.class},msg:#{e.cause.cause.cause}}"
+        end
+
         task_report = {}
         return task_report
+      end
+
+      ### Exception code
+      class Error < ::Embulk::DataError
+      end
+
+      class Error1 < ::StandardError; end
+      class Error2 < ::StandardError; end
+      class Error3 < ::StandardError; end
+      
+      def err1
+        raise Error1, "err"
+      end
+      
+      def err2
+        begin
+          err1
+        rescue Error1 => e
+          raise Error2, e
+        end
+      end
+      
+      def err3
+        begin
+          err2
+        rescue Error2 => e
+          raise Error3, e
+        end
+      end
+
+      def err
+        begin
+          err3
+        rescue => e
+          # Avoid `TypeError,msg:exception class/object expected`
+          # raise Error, e
+          raise Error.new(e)
+        end
       end
     end
 

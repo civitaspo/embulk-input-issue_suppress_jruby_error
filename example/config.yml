@@ -1,0 +1,6 @@
+in:
+  type: issue_suppress_jruby_error
+  option1: 1
+
+out:
+  type: stdout
